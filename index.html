@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plate Hunter</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { 
+            font-family: sans-serif; 
+            background-color: var(--tg-theme-bg-color, #f0f0f0); 
+            color: var(--tg-theme-text-color, #222); 
+            text-align: center; 
+            padding: 20px; 
+        }
+        .plate { 
+            font-size: 32px; 
+            font-weight: bold; 
+            background: white; 
+            color: black; 
+            border: 2px solid black; 
+            border-radius: 5px; 
+            padding: 15px; 
+            display: inline-block; 
+            margin: 20px 0; 
+            font-family: monospace; 
+        }
+        button { 
+            background-color: var(--tg-theme-button-color, #0088cc); 
+            color: var(--tg-theme-button-text-color, #fff); 
+            border: none; 
+            padding: 12px 20px; 
+            font-size: 16px; 
+            border-radius: 8px; 
+            margin: 5px; 
+            cursor: pointer; 
+        }
+        .garage { 
+            margin-top: 30px; 
+            text-align: left; 
+            background: rgba(0,0,0,0.05); 
+            padding: 15px; 
+            border-radius: 8px; 
+        }
+    </style>
+</head>
+<body>
+    <h2 id="greeting">Привет, Игрок!</h2>
+    <p>Монеты: <strong id="coins">1000</strong></p>
+
+    <div class="plate" id="currentPlate">---</div>
+    <p>Цена: <span id="price">0</span> монет</p>
+
+    <button onclick="spin()">Искать номер (100 монет)</button>
+    <br><br>
+    <button onclick="sell()">Продать</button>
+    <button onclick="keep()">В гараж</button>
+
+    <div class="garage">
+        <h3>Ваш гараж:</h3>
+        <ul id="garageList"></ul>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        document.getElementById('greeting').innerText = `Привет, ${tg.initDataUnsafe?.user?.first_name || 'Игрок'}!`;
+
+        let coins = 1000;
+        let currentPlate = null;
+        let currentPrice = 0;
+        const garage = [];
+
+        function getRandomElement(arr) { 
+            return arr[Math.floor(Math.random() * arr.length)]; 
+        }
+        
+        function generatePlate() {
+            const letters = 'АВЕКМНОРСТУХ'.split('');
+            const regions = ['77', '99', '199', '777', '177', '797', '97'];
+            const l1 = getRandomElement(letters);
+            const l2 = getRandomElement(letters);
+            const l3 = getRandomElement(letters);
+            const nums = String(Math.floor(Math.random() * 999) + 1).padStart(3, '0');
+            const reg = getRandomElement(regions);
+            return `${l1}${nums}${l2}${l3} ${reg}`;
+        }
+
+        function spin() {
+            if (coins < 100) return alert("Недостаточно монет!");
+            coins -= 100;
+            currentPlate = generatePlate();
+            currentPrice = Math.floor(Math.random() * 500) + 50; 
+            updateUI();
+        }
+
+        function sell() {
+            if (!currentPlate) return;
+            coins += currentPrice;
+            currentPlate = null;
+            updateUI();
+        }
+
+        function keep() {
+            if (!currentPlate) return;
+            garage.push(currentPlate);
+            currentPlate = null;
+            updateUI();
+        }
+
+        function updateUI() {
+            document.getElementById('coins').innerText = coins;
+            document.getElementById('currentPlate').innerText = currentPlate || '---';
+            document.getElementById('price').innerText = currentPlate ? currentPrice : '0';
+            
+            const list = document.getElementById('garageList');
+            list.innerHTML = '';
+            garage.forEach(p => {
+                const li = document.createElement('li');
+                li.innerText = p;
+                list.appendChild(li);
+            });
+        }
+    </script>
+</body>
+</html>
